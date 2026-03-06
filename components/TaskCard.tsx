@@ -25,7 +25,7 @@ export default function TaskCard({ task, variant = "pc" }: TaskCardProps) {
             <p className="text-xs text-brand-sub mb-2.5 leading-relaxed">{task.description}</p>
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
-                <span className="text-[11px] text-brand-light">📍 {task.distance_km}km</span>
+                <span className="text-[11px] text-brand-light">📍 {task.distance_km > 0 && task.distance_km < 9999 ? `${task.distance_km < 1 ? (task.distance_km * 1000).toFixed(0) + "m" : task.distance_km.toFixed(1) + "km"}` : task.location}</span>
                 <span className="text-[11px] text-brand-light">⏰ {timeAgo(task.created_at)}</span>
               </div>
               <span className="bg-gradient-to-r from-mint to-sky text-white text-xs font-bold px-3.5 py-1.5 rounded-xl">
@@ -62,7 +62,7 @@ export default function TaskCard({ task, variant = "pc" }: TaskCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-xs text-brand-light flex items-center gap-1">
-                📍 {task.distance_km}km
+                📍 {task.distance_km > 0 && task.distance_km < 9999 ? `${task.distance_km < 1 ? (task.distance_km * 1000).toFixed(0) + "m" : task.distance_km.toFixed(1) + "km"}` : task.location}
               </span>
               <span className="text-xs text-brand-light flex items-center gap-1">
                 ⏰ {timeAgo(task.created_at)}

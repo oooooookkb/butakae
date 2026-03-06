@@ -35,14 +35,15 @@ export default function ChatRoomPage() {
       if (!room) { router.push("/chat"); return; }
       setChatRoom(room);
 
-      // Fetch messages
+      // Fetch messages (최근 50개, cursor pagination)
       const { data: msgs } = await supabase
         .from("messages")
         .select("*, sender:profiles!sender_id(*)")
         .eq("chat_room_id", roomId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
-      if (msgs) setMessages(msgs);
+      if (msgs) setMessages(msgs.reverse());
       setLoading(false);
 
       // Subscribe to new messages

@@ -18,13 +18,13 @@ function toDisplayTask(t: any): Task {
     price: t.price,
     category: t.category,
     location: t.location,
-    distance_km: 0,
+    distance_km: t.distance_km ?? 0,
     is_urgent: t.is_urgent,
     created_at: t.created_at,
     status: t.status,
     requester_id: t.requester_id,
-    requester_name: t.requester?.name ?? "익명",
-    requester_rating: t.requester?.rating ?? 5.0,
+    requester_name: t.requester_name ?? t.requester?.name ?? "익명",
+    requester_rating: t.requester_rating ?? t.requester?.rating ?? 5.0,
   };
 }
 
@@ -33,6 +33,40 @@ export default function HomePage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<string>("수원시 영통구");
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // 스마트 피드 또는 일반 피드로 데이터 가져오기
+  const fetchTasks = async (category?: string) => {
+    const supabase = createClient();
+    const cat = category === "전체" ? null : category;
+
+    // 스마트 피드 RPC 시도 (v4 마이그레이션 후 작동)
+    const { data: smartData, error: smartError } = await supabase.rpc("get_smart_feed", {
+      p_user_lat: userProfile?.lat ?? null,
+      p_user_lng: userProfile?.lng ?? null,
+      p_user_location: userProfile?.location ?? null,
+      p_category: cat ?? null,
+      p_limit: 30,
+      p_offset: 0,
+    });
+
+    if (!smartError && smartData) {
+      return smartData.map(toDisplayTask);
+    }
+
+    // fallback: 일반 쿼리 (RPC 없으면)
+    let query = supabase
+      .from("tasks")
+      .select("*, requester:profiles!requester_id(*)")
+      .eq("status", "open")
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    if (cat) query = query.eq("category", cat);
+
+    const { data } = await query;
+    return data ? data.map(toDisplayTask) : [];
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -41,17 +75,23 @@ export default function HomePage() {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("location")
+          .select("location, lat, lng")
           .eq("id", user.id)
           .single();
-        if (profile?.location) setUserLocation(profile.location);
+        if (profile) {
+          setUserProfile(profile);
+          if (profile.location) setUserLocation(profile.location);
+        }
       }
 
-      const { data } = await supabase
+      // 초기 로드는 일반 쿼리 (profile 로딩 전이라)
+      const supabase2 = createClient();
+      const { data } = await supabase2
         .from("tasks")
         .select("*, requester:profiles!requester_id(*)")
         .eq("status", "open")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(30);
 
       if (data) setTasks(data.map(toDisplayTask));
       setLoading(false);
@@ -59,10 +99,20 @@ export default function HomePage() {
     init();
   }, []);
 
-  const filtered =
-    selectedCategory === "전체"
-      ? tasks
-      : tasks.filter((t) => t.category === (selectedCategory as TaskCategory));
+  // 카테고리 변경 시 서버에서 다시 fetch
+  useEffect(() => {
+    if (loading) return;
+    const refetch = async () => {
+      setLoading(true);
+      const result = await fetchTasks(selectedCategory);
+      setTasks(result);
+      setLoading(false);
+    };
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
+
+  const filtered = tasks;
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
