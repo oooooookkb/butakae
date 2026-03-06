@@ -82,7 +82,28 @@ export interface Payment {
   amount: number;
   payment_key: string | null;
   order_id: string;
+  method: string;
   status: "pending" | "confirmed" | "failed" | "cancelled";
   confirmed_at: string | null;
+  created_at: string;
+}
+
+export type NotificationType =
+  | "task_accepted"
+  | "task_completed"
+  | "task_cancelled"
+  | "new_message"
+  | "new_review"
+  | "payment_confirmed";
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  task_id: string | null;
+  related_user_id: string | null;
+  is_read: boolean;
   created_at: string;
 }

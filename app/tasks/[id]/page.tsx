@@ -38,45 +38,53 @@ export default function TaskDetailPage() {
     setActionLoading(true);
     const supabase = createClient();
 
-    // Update task
-    await supabase
-      .from("tasks")
-      .update({ status: "in_progress", helper_id: currentUserId, updated_at: new Date().toISOString() })
-      .eq("id", taskId);
+    // 원자적 매칭: race condition 방지 RPC
+    const { data: result, error } = await supabase.rpc("accept_task", {
+      p_task_id: taskId,
+      p_helper_id: currentUserId,
+    });
 
-    // Create chat room
-    const { data: room } = await supabase
-      .from("chat_rooms")
-      .insert({
-        task_id: taskId,
-        requester_id: task.requester_id,
-        helper_id: currentUserId,
-      })
-      .select()
-      .single();
+    if (error || !result?.success) {
+      alert(result?.error === "already_taken" ? "이미 다른 분이 수락했어요!" : "수락에 실패했어요. 다시 시도해주세요.");
+      setActionLoading(false);
+      router.refresh();
+      return;
+    }
 
-    if (room) {
-      router.push(`/chat/${room.id}`);
+    if (result.chat_room_id) {
+      router.push(`/chat/${result.chat_room_id}`);
     }
   };
 
   const handleComplete = async () => {
     setActionLoading(true);
     const supabase = createClient();
-    await supabase
-      .from("tasks")
-      .update({ status: "done", updated_at: new Date().toISOString() })
-      .eq("id", taskId);
+    const { data: result } = await supabase.rpc("complete_task", {
+      p_task_id: taskId,
+      p_user_id: currentUserId,
+    });
+
+    if (!result?.success) {
+      alert("완료 처리에 실패했어요.");
+      setActionLoading(false);
+      return;
+    }
     router.push(`/review/${taskId}`);
   };
 
   const handleCancel = async () => {
     setActionLoading(true);
     const supabase = createClient();
-    await supabase
-      .from("tasks")
-      .update({ status: "cancelled", updated_at: new Date().toISOString() })
-      .eq("id", taskId);
+    const { data: result } = await supabase.rpc("cancel_task", {
+      p_task_id: taskId,
+      p_user_id: currentUserId,
+    });
+
+    if (!result?.success) {
+      alert("취소 처리에 실패했어요.");
+      setActionLoading(false);
+      return;
+    }
     router.push("/my-tasks");
   };
 
@@ -237,7 +245,7 @@ export default function TaskDetailPage() {
             </>
           )}
 
-          {task.status === "done" && isRequester && (
+          {task.status === "done" && (isRequester || isHelper) && (
             <Link
               href={`/review/${taskId}`}
               className="flex-1 bg-gradient-to-r from-coral to-coral-dark text-white font-bold py-3.5 rounded-xl text-center active:scale-[0.98] transition-all"

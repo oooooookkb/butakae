@@ -8,6 +8,7 @@ import TaskCard from "@/components/TaskCard";
 import { CATEGORIES } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { Task, TaskCategory } from "@/types";
+import NotificationBell from "@/components/NotificationBell";
 
 function toDisplayTask(t: any): Task {
   return {
@@ -90,10 +91,7 @@ export default function HomePage() {
               <button className="w-9 h-9 rounded-full bg-white border border-mint/15 flex items-center justify-center text-base hover:border-mint hover:scale-105 transition-all">
                 🔍
               </button>
-              <button className="w-9 h-9 rounded-full bg-white border border-mint/15 flex items-center justify-center text-base hover:border-mint hover:scale-105 transition-all relative">
-                🔔
-                <span className="absolute top-1 right-1 w-2 h-2 bg-coral rounded-full border-2 border-bg" />
-              </button>
+              <NotificationBell />
               <Link href="/create" className="bg-gradient-to-r from-coral to-coral-dark text-white px-5 py-2 rounded-full text-sm font-bold shadow-coral hover:-translate-y-px hover:shadow-lg transition-all">
                 ✏️ 부탁 올리기
               </Link>
@@ -195,10 +193,9 @@ export default function HomePage() {
           </Link>
           <div className="flex gap-2">
             <button className="w-8 h-8 rounded-full bg-bg flex items-center justify-center text-sm">🔍</button>
-            <button className="w-8 h-8 rounded-full bg-bg flex items-center justify-center text-sm relative">
+            <Link href="/notifications" className="w-8 h-8 rounded-full bg-bg flex items-center justify-center text-sm relative">
               🔔
-              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-coral rounded-full border border-white" />
-            </button>
+            </Link>
           </div>
         </header>
 

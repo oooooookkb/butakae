@@ -23,53 +23,69 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
 
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [reviewTarget, setReviewTarget] = useState<any>(null);
+
   useEffect(() => {
     const init = async () => {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/login"); return; }
+      setCurrentUserId(user.id);
 
       const { data: t } = await supabase
         .from("tasks")
-        .select("*, helper:profiles!helper_id(*)")
+        .select("*, helper:profiles!helper_id(*), requester:profiles!requester_id(*)")
         .eq("id", taskId)
         .single();
 
       setTask(t);
 
-      // Check if already reviewed
+      // 양방향 리뷰: 내가 요청자면 도우미를 평가, 도우미면 요청자를 평가
+      if (t) {
+        if (user.id === t.requester_id) {
+          setReviewTarget(t.helper);
+        } else if (user.id === t.helper_id) {
+          setReviewTarget(t.requester);
+        }
+      }
+
+      // 내가 이미 리뷰했는지 확인 (양방향이므로 reviewer_id로 체크)
       const { data: existing } = await supabase
         .from("reviews")
         .select("id")
         .eq("task_id", taskId)
+        .eq("reviewer_id", user.id)
         .limit(1);
 
       if (existing && existing.length > 0) setAlreadyReviewed(true);
       setLoading(false);
     };
     init();
-  }, [taskId]);
+  }, [taskId, router]);
 
   const handleSubmit = async () => {
-    if (!task?.helper_id) return;
+    if (!reviewTarget) return;
     setSubmitting(true);
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
+
+    const revieweeId = reviewTarget.id;
 
     // Insert review
     await supabase.from("reviews").insert({
       task_id: taskId,
-      reviewer_id: user.id,
-      reviewee_id: task.helper_id,
+      reviewer_id: currentUserId,
+      reviewee_id: revieweeId,
       rating,
       content: content.trim() || null,
     });
 
-    // Recalculate helper average rating
+    // 상대방 평균 rating 재계산
     const { data: allReviews } = await supabase
       .from("reviews")
       .select("rating")
-      .eq("reviewee_id", task.helper_id);
+      .eq("reviewee_id", revieweeId);
 
     if (allReviews && allReviews.length > 0) {
       const avg = allReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / allReviews.length;
@@ -79,8 +95,18 @@ export default function ReviewPage() {
           rating: Math.round(avg * 10) / 10,
           completed_count: allReviews.length,
         })
-        .eq("id", task.helper_id);
+        .eq("id", revieweeId);
     }
+
+    // 상대방에게 리뷰 알림
+    await supabase.from("notifications").insert({
+      user_id: revieweeId,
+      type: "new_review",
+      title: "새 리뷰가 도착했어요!",
+      body: `⭐ ${rating}점 리뷰가 작성되었습니다`,
+      task_id: taskId,
+      related_user_id: currentUserId,
+    });
 
     router.push("/my-tasks/done");
   };
@@ -120,13 +146,13 @@ export default function ReviewPage() {
 
       <div className="max-w-xl mx-auto px-4 py-6 flex flex-col gap-5">
         {/* Task + Helper info */}
-        {task && (
+        {reviewTarget && (
           <div className="bg-white rounded-2xl p-5 border border-mint/10 text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-mint to-sky flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
-              {task.helper?.name?.[0] ?? "?"}
+              {reviewTarget.name?.[0] ?? "?"}
             </div>
-            <p className="font-bold text-lg">{task.helper?.name ?? "도우미"}</p>
-            <p className="text-xs text-brand-light mt-1">📋 {task.title}</p>
+            <p className="font-bold text-lg">{reviewTarget.name ?? "상대방"}</p>
+            <p className="text-xs text-brand-light mt-1">📋 {task?.title}</p>
           </div>
         )}
 
