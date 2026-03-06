@@ -7,9 +7,11 @@ import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { icon: "🏠", label: "홈", badge: null, href: "/" },
+  { icon: "💰", label: "돈벌기", badge: null, href: "/earn" },
   { icon: "📋", label: "내가 올린 부탁", badge: null, href: "/my-tasks" },
   { icon: "✅", label: "내가 한 일", badge: null, href: "/my-tasks/done" },
   { icon: "💬", label: "채팅", badge: null, href: "/chat" },
+  { icon: "❤️", label: "즐겨찾기", badge: null, href: "/favorites" },
 ];
 
 const NAV_ITEMS2 = [
