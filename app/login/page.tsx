@@ -21,16 +21,15 @@ export default function LoginPage() {
     const { data } = await supabase.auth.signInWithOAuth({
       provider: "kakao",
       options: {
-        scopes: "profile_nickname profile_image",
         redirectTo: `${window.location.origin}/auth/callback`,
         skipBrowserRedirect: true,
       },
     });
 
     if (data?.url) {
-      // Supabase 기본 scope에서 account_email 강제 제거
+      // Supabase 기본 scope(account_email 포함)를 완전히 교체
       const url = new URL(data.url);
-      url.searchParams.set("scopes", "profile_nickname profile_image");
+      url.searchParams.set("scope", "profile_nickname profile_image");
       window.location.href = url.toString();
     }
   };
