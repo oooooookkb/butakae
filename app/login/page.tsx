@@ -18,13 +18,21 @@ export default function LoginPage() {
   const handleKakaoLogin = async () => {
     setLoading(true);
     const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
+    const { data } = await supabase.auth.signInWithOAuth({
       provider: "kakao",
       options: {
         scopes: "profile_nickname profile_image",
         redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: true,
       },
     });
+
+    if (data?.url) {
+      // Supabase 기본 scope에서 account_email 강제 제거
+      const url = new URL(data.url);
+      url.searchParams.set("scopes", "profile_nickname profile_image");
+      window.location.href = url.toString();
+    }
   };
 
   return (
