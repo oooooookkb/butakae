@@ -88,6 +88,17 @@ export interface Payment {
   created_at: string;
 }
 
+export interface TaskApplication {
+  id: string;
+  task_id: string;
+  user_id: string;
+  offer_price: number;
+  message: string | null;
+  status: "pending" | "accepted" | "rejected";
+  created_at: string;
+  applicant?: Profile;
+}
+
 export type NotificationType =
   | "task_accepted"
   | "task_completed"
