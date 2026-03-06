@@ -15,6 +15,7 @@ const NAV_ITEMS = [
 ];
 
 const NAV_ITEMS2 = [
+  { icon: "🗺️", label: "지도", href: "/map" },
   { icon: "📍", label: "내 동네 설정", href: "/location" },
 ];
 
