@@ -2,15 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import MobileTabBar from "@/components/MobileTabBar";
 import NotificationBell from "@/components/NotificationBell";
 import { CATEGORIES, formatPrice, timeAgo, CATEGORY_COLORS, CATEGORY_EMOJI } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { Task } from "@/types";
-
-const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 function toTask(t: any): Task {
   return {
@@ -43,7 +40,6 @@ export default function HomePage() {
   const [userLng, setUserLng] = useState<number | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
-  const [showMap, setShowMap] = useState(true);
 
   useEffect(() => {
     const init = async () => {
@@ -341,48 +337,23 @@ export default function HomePage() {
           <div className="p-8">
             {mode === "find" ? (
               <>
-                {/* 미니맵 + 통계 */}
-                <div className="grid grid-cols-3 gap-5 mb-7">
-                  <div className="col-span-2 bg-white rounded-3xl border border-mint/10 overflow-hidden relative" style={{ height: "280px" }}>
-                    {userLat && userLng && showMap && (
-                      <MapView
-                        tasks={tasks}
-                        userLat={userLat}
-                        userLng={userLng}
-                        selectedCategory={selectedCategory}
-                      />
-                    )}
-                    {!userLat && (
-                      <div className="h-full flex items-center justify-center text-brand-light">
-                        <div className="text-center">
-                          <p className="text-3xl mb-2">🗺️</p>
-                          <p className="text-sm font-bold">동네를 설정하면 지도가 표시돼요</p>
-                          <Link href="/location" className="text-mint-dark text-xs font-bold mt-2 inline-block">설정하기 →</Link>
-                        </div>
-                      </div>
-                    )}
-                    <Link href="/map" className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm border border-mint/15 rounded-xl px-3 py-1.5 text-xs font-bold text-mint-dark shadow-sm hover:scale-105 transition-transform z-[500]">
-                      🗺️ 지도 크게 보기
-                    </Link>
+                {/* 통계 */}
+                <div className="flex gap-4 mb-7">
+                  <div className="bg-gradient-to-br from-mint to-sky rounded-2xl p-5 text-white flex-1">
+                    <p className="text-xs opacity-80">주변 매칭 대기</p>
+                    <p className="text-3xl font-black mt-1">{nearbyCount}<span className="text-lg">건</span></p>
+                    <p className="text-[10px] opacity-70 mt-1">반경 2km 이내</p>
                   </div>
-
-                  <div className="flex flex-col gap-4">
-                    <div className="bg-gradient-to-br from-mint to-sky rounded-2xl p-5 text-white flex-1">
-                      <p className="text-xs opacity-80">주변 매칭 대기</p>
-                      <p className="text-3xl font-black mt-1">{nearbyCount}<span className="text-lg">건</span></p>
-                      <p className="text-[10px] opacity-70 mt-1">반경 2km 이내</p>
-                    </div>
-                    <div className="bg-white rounded-2xl border border-mint/10 p-5 flex-1">
-                      <p className="text-xs text-brand-light">평균 보상</p>
-                      <p className="text-2xl font-black text-coral mt-1">{formatPrice(avgPrice)}</p>
-                    </div>
-                    {urgentTasks.length > 0 && (
-                      <div className="bg-coral/5 border border-coral/15 rounded-2xl p-5 flex-1">
-                        <p className="text-xs text-coral-dark">⚡ 급구</p>
-                        <p className="text-2xl font-black text-coral mt-1">{urgentTasks.length}<span className="text-sm">건</span></p>
-                      </div>
-                    )}
+                  <div className="bg-white rounded-2xl border border-mint/10 p-5 flex-1">
+                    <p className="text-xs text-brand-light">평균 보상</p>
+                    <p className="text-2xl font-black text-coral mt-1">{formatPrice(avgPrice)}</p>
                   </div>
+                  {urgentTasks.length > 0 && (
+                    <div className="bg-coral/5 border border-coral/15 rounded-2xl p-5 flex-1">
+                      <p className="text-xs text-coral-dark">⚡ 급구</p>
+                      <p className="text-2xl font-black text-coral mt-1">{urgentTasks.length}<span className="text-sm">건</span></p>
+                    </div>
+                  )}
                 </div>
 
                 {/* 카테고리 필터 */}
@@ -454,21 +425,6 @@ export default function HomePage() {
         <div className="pb-20">
           {mode === "find" ? (
             <>
-              {/* 미니맵 */}
-              {userLat && userLng && showMap && (
-                <div className="mx-3 mt-3 rounded-2xl overflow-hidden border border-mint/10 relative" style={{ height: "180px" }}>
-                  <MapView
-                    tasks={tasks}
-                    userLat={userLat}
-                    userLng={userLng}
-                    selectedCategory={selectedCategory}
-                  />
-                  <Link href="/map" className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm border border-mint/15 rounded-lg px-2.5 py-1 text-[10px] font-bold text-mint-dark shadow-sm z-[500]">
-                    크게 보기 →
-                  </Link>
-                </div>
-              )}
-
               {/* 통계 바 */}
               <div className="flex items-center gap-2 mx-3 mt-2.5 mb-2">
                 <div className="flex-1 bg-white rounded-xl py-2 px-3 border border-mint/10 text-center">

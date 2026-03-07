@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { icon: "🏠", label: "홈", badge: null, href: "/" },
-  { icon: "💰", label: "돈벌기", badge: null, href: "/earn" },
   { icon: "📋", label: "내가 올린 부탁", badge: null, href: "/my-tasks" },
   { icon: "✅", label: "내가 한 일", badge: null, href: "/my-tasks/done" },
   { icon: "💬", label: "채팅", badge: null, href: "/chat" },
@@ -15,7 +14,6 @@ const NAV_ITEMS = [
 ];
 
 const NAV_ITEMS2 = [
-  { icon: "🗺️", label: "지도", href: "/map" },
   { icon: "📍", label: "내 동네 설정", href: "/location" },
 ];
 
