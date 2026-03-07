@@ -341,8 +341,8 @@ export default function ProfilePage() {
       {/* 빠른 메뉴 */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {[
-          { icon: "📋", label: "내가 올린 부탁", href: "/my-tasks" },
-          { icon: "💰", label: "돈벌기", href: "/earn" },
+          { icon: "📋", label: "내가 올린 부탁", href: "/?mode=request" },
+          { icon: "💰", label: "돈벌기", href: "/?mode=find" },
           { icon: "💬", label: "채팅", href: "/chat" },
           { icon: "📍", label: "동네 설정", href: "/location" },
           { icon: "🔔", label: "알림", href: "/notifications" },

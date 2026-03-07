@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import MobileTabBar from "@/components/MobileTabBar";
 import NotificationBell from "@/components/NotificationBell";
@@ -30,7 +31,9 @@ function distanceText(km: number): string {
 }
 
 export default function HomePage() {
-  const [mode, setMode] = useState<"find" | "request">("find");
+  const searchParams = useSearchParams();
+  const initialMode = searchParams.get("mode") === "request" ? "request" : "find";
+  const [mode, setMode] = useState<"find" | "request">(initialMode);
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [myTasks, setMyTasks] = useState<Task[]>([]);
